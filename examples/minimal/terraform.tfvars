@@ -1,5 +1,6 @@
-slack_channel_map = <<EOS
+spark_channel_map = <<EOS
 {
-  "test-alarms": "#webhook-tests"
+  "production-notices": "Y2lzY29zcGFyazovL3VzL1JPT00vMDA2ZjYzNzAtMWJlOS0xMWU4LTljNTUtOTMzZmEzYWJkNjYy",
+  "testingSpark-notices": "Y2lzY29zcGFyazovL3VzL1JPT00vMDA2ZjYzNzAtMWJlOS0xMWU4LTljNTUtOTMzZmEzYWJkNjYy"
 }
 EOS

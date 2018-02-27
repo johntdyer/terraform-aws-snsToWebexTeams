@@ -1,19 +1,19 @@
-variable "access_key" {
-  type = "string"
-}
+# variable "access_key" {
+#   type = "string"
+# }
 
-variable "secret_key" {
-  type = "string"
-}
+# variable "secret_key" {
+#   type = "string"
+# }
 
 variable "region" {
   type = "string"
 }
 
-variable "slack_webhook_url" {
+variable "spark_bearer_token" {
   type = "string"
 }
 
-variable "slack_channel_map" {
+variable "spark_channel_map" {
   type = "string"
 }

@@ -1,52 +1,49 @@
-# aws-sns-slack-terraform
+# aws-sns-spark-terraform
 
 ![Minimal CloudWatch Screenshot](screenshots/minimal-cloudwatch-screenshot.png)
 
-This is a [Terraform](https://www.terraform.io/) module which maps an AWS SNS topic name to a Slack channel.
-The AWS Lambda function code it uses is derived from [robbwagoner/aws-lambda-sns-to-slack](https://github.com/robbwagoner/aws-lambda-sns-to-slack).
+This is a [Terraform](https://www.terraform.io/) module which maps an AWS SNS topic name to a Spark channel.
+The AWS Lambda function code it uses is derived from [robbwagoner/aws-lambda-sns-to-spark](https://github.com/robbwagoner/aws-lambda-sns-to-spark).
 
 The supported features are:
 
-- Posting AWS SNS notifications to Slack channels
+- Posting AWS SNS notifications to Spark channels
 - Building necessary AWS resources by Terraform automatically
 - Customizable topic-to-channel map
 
 ## Usage
 
-aws-sns-slack-terraform is a [Terraform module](https://www.terraform.io/docs/modules/index.html).
+aws-sns-spark-terraform is a [Terraform module](https://www.terraform.io/docs/modules/index.html).
 You just need to include the module in one of your Terraform scripts and set up SNS topics and permissions.
 See [examples/](/examples) for concrete examples.
 
 ```hcl
-module "sns_to_slack" {
-  source = "github.com/builtinnya/aws-sns-slack-terraform/module"
+module "sns_to_spark" {
+  source = "github.com/builtinnya/aws-sns-spark-terraform/module"
 
-  slack_webhook_url = "hooks.slack.com/services/XXXXXXXXX/XXXXXXXXX/XXXXXXXXXXXXXXXXXXXXXXXX"
-  slack_channel_map = "{ \"topic-name\": \"#slack-channel\" }"
-
+  spark_bearer_token = "abc123"
+  spark_channel_map = "{\"production-notices\": \"Y2lzY29zcGFyazovL3VzL1JPT00vMDA2ZjYzNzAtMWJlOS0xMWU4LTljNTUtOTMzZmEzYWJkNjYy\"}"
   # The following variables are optional.
-  lambda_function_name = "sns-to-slack"
-  default_username = "AWS Lambda"
-  default_channel = "#webhook-tests"
-  default_emoji = ":information_source:"
+  lambda_function_name = "sns-to-spark"
+
 }
 
-resource "aws_sns_topic" "test_topic" {
-  name = "topic-name"
+resource "aws_sns_topic" "testing_spark_alarms" {
+  name = "testingSpark-notices"
 }
 
-resource "aws_lambda_permission" "allow_lambda_sns_to_slack" {
-  statement_id = "AllowSNSToSlackExecutionFromSNS"
+resource "aws_lambda_permission" "allow_lambda_sns_to_spark" {
+  statement_id = "AllowSNSToSparkExecutionFromSNS"
   action = "lambda:invokeFunction"
-  function_name = "${module.sns_to_slack.lambda_function_arn}"
+  function_name = "${module.sns_to_spark.lambda_function_arn}"
   principal = "sns.amazonaws.com"
-  source_arn = "${aws_sns_topic.test_topic.arn}"
+  source_arn = "${aws_sns_topic.testing_spark_alarms.arn}"
 }
 
-resource "aws_sns_topic_subscription" "lambda_sns_to_slack" {
-  topic_arn = "${aws_sns_topic.test_topic.arn}"
+resource "aws_sns_topic_subscription" "lambda_sns_to_spark" {
+  topic_arn = "${aws_sns_topic.testing_spark_alarms.arn}"
   protocol = "lambda"
-  endpoint = "${module.sns_to_slack.lambda_function_arn}"
+  endpoint = "${module.sns_to_spark.lambda_function_arn}"
 }
 ```
 
@@ -54,14 +51,10 @@ resource "aws_sns_topic_subscription" "lambda_sns_to_slack" {
 
 |       **Variable**         |                          **Description**                          | **Required** | **Default**                    |
 |:--------------------------:|:-----------------------------------------------------------------:|--------------|--------------------------------|
-| **slack_webhook_url**      | Slack incoming webhook URL without protocol name.                 | yes          |                                |
-| **slack_channel_map**      | Topic-to-channel mapping string in JSON.                          | yes          |                                |
-| **lambda_function_name**   | AWS Lambda function name for the Slack notifier                   | no           | `"sns-to-slack"`               |
-| **default_username**       | Default username for notifications used if no matching one found. | no           |  `"AWS Lambda"`                |
-| **default_channel**        | Default channel used if no matching channel found.                | no           | `"#webhook-tests"`             |
-| **default_emoji**          | Default emoji used if no matching emoji found.                    | no           | `":information_source:"`       |
-| **lambda_iam_role_name**   | IAM role name for lambda functions.                               | no           | `"lambda-sns-to-slack"`        |
-| **lambda_iam_policy_name** | IAM policy name for lambda functions.                             | no           | `"lambda-sns-to-slack-policy"` |
+| **spark_channel_map**      | Topic-to-channel mapping string in JSON.                          | yes          |                                |
+| **lambda_function_name**   | AWS Lambda function name for the Spark notifier                   | no           | `"sns-to-spark"`               |
+| **lambda_iam_role_name**   | IAM role name for lambda functions.                               | no           | `"lambda-sns-to-spark"`        |
+| **lambda_iam_policy_name** | IAM policy name for lambda functions.                             | no           | `"lambda-sns-to-spark-policy"` |
 
 ### Output variables
 
@@ -92,10 +85,8 @@ It builds no extra AWS resources except a CloudWatch alarm for AWS Lambda's dura
     ```
 
     ```hcl
-    access_key = "<your AWS Access Key>"
-    secret_key = "<your AWS Secret Key>"
     region = "<region>"
-    slack_webhook_url="hooks.slack.com/services/XXXXXXXXX/XXXXXXXXX/XXXXXXXXXXXXXXXXXXXXXXXX"
+    spark_bearer_token = "abc123"
     ```
 
 3. Execute the following commands to build resources using Terraform.
@@ -130,30 +121,30 @@ $ AWS_ACCESS_KEY_ID=<ACCESS_KEY> \
 
 ## Development
 
-The main AWS Lambda function code is located in [sns-to-slack/](/sns-to-slack) directory.
+The main AWS Lambda function code is located in [sns-to-spark/](/sns-to-spark) directory.
 To prepare development, you need to create [virtualenv](https://virtualenv.pypa.io/en/stable/) for this project and install required pip packages as following.
 
 ```bash
-$ virtualenv sns-to-slack/virtualenv
-$ source sns-to-slack/virtualenv/bin/activate
-$ pip install -r sns-to-slack/requirements.txt
+$ virtualenv sns-to-spark/virtualenv
+$ source sns-to-spark/virtualenv/bin/activate
+$ pip install -r sns-to-spark/requirements.txt
 ```
 
-You need to create [module/lambda/sns-to-slack.zip](/module/lambda/sns-to-slack.zip) to update the code as following.
+You need to create [module/lambda/sns-to-spark.zip](/module/lambda/sns-to-spark.zip) to update the code as following.
 
 ```bash
-$ source sns-to-slack/virtualenv/bin/activate # if you haven't yet
+$ source sns-to-spark/virtualenv/bin/activate # if you haven't yet
 $ ./build-function.sh
 ```
 
 ### Testing
 
-To test the function locally, just run [lambda_function.py](/sns-to-slack/lambda_function.py) with some environment variables.
+To test the function locally, just run [lambda_function.py](/sns-to-spark/lambda_function.py) with some environment variables.
 
 ```bash
-$ WEBHOOK_URL="hooks.slack.com/services/XXXXXXXXX/XXXXXXXXX/XXXXXXXXXXXXXXXXXXXXXXXX" \
-  CHANNEL_MAP=`echo '{ "production-notices": "#webhook-tests" }' | base64` \
-  python sns-to-slack/lambda_function.py
+$ SPARK_TOKEN="abv123" \
+  CHANNEL_MAP=`echo '{"production-notices": "Y2lzY29zcGFyazovL3VzL1JPT00vMDA2ZjYzNzAtMWJlOS0xMWU4LTljNTUtOTMzZmEzYWJkNjYy"}' | base64` \
+  python sns-to-spark/lambda_function.py
 ```
 
 ## Contributors
@@ -162,6 +153,6 @@ See [CONTRIBUTORS.md](./CONTRIBUTORS.md).
 
 ## License
 
-Copyright © 2017-2018 Naoto Yokoyama
+Copyright © 2018 John Dyer
 
 Distributed under the Apache license version 2.0. See the [LICENSE](./LICENSE) file for full details.

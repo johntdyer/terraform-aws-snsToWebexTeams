@@ -1,14 +1,14 @@
-variable "slack_webhook_url" {
-  type = "string"
-}
+# variable "spark_webhook_url" {
+#   type = "string"
+# }
 
-variable "slack_channel_map" {
+variable "spark_channel_map" {
   type = "string"
 }
 
 variable "lambda_function_name" {
   type = "string"
-  default = "sns-to-slack"
+  default = "sns-to-spark"
 }
 
 variable "default_username" {
@@ -18,7 +18,7 @@ variable "default_username" {
 
 variable "default_channel" {
   type = "string"
-  default = "#webhook-tests"
+  default = ""
 }
 
 variable "default_emoji" {
@@ -28,10 +28,15 @@ variable "default_emoji" {
 
 variable "lambda_iam_role_name" {
   type = "string"
-  default = "lambda-sns-to-slack"
+  default = "lambda-sns-to-spark"
 }
 
 variable "lambda_iam_policy_name" {
   type = "string"
-  default = "lambda-sns-to-slack-policy"
+  default = "lambda-sns-to-spark-policy"
+}
+
+
+variable "spark_bearer_token" {
+  type = "string"
 }

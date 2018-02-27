@@ -2,7 +2,7 @@
 # IAM roles
 #
 
-resource "aws_iam_role" "lambda_sns_to_slack" {
+resource "aws_iam_role" "lambda_sns_to_spark" {
   name = "${var.lambda_iam_role_name}"
   assume_role_policy = "${file("${path.module}/policies/lambda-assume-role.json")}"
 }
@@ -11,8 +11,8 @@ resource "aws_iam_role" "lambda_sns_to_slack" {
 # IAM policies
 #
 
-resource "aws_iam_role_policy" "lambda_sns_to_slack" {
+resource "aws_iam_role_policy" "lambda_sns_to_spark" {
   name = "${var.lambda_iam_policy_name}"
-  role = "${aws_iam_role.lambda_sns_to_slack.id}"
+  role = "${aws_iam_role.lambda_sns_to_spark.id}"
   policy = "${file("${path.module}/policies/lambda-role-policy.json")}"
 }

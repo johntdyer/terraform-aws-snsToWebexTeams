@@ -8,9 +8,9 @@ set -o xtrace
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 outdir="${__dir}/module/lambda"
-zipname="sns-to-slack.zip"
+zipname="sns-to-spark.zip"
 
-pushd sns-to-slack
+pushd sns-to-spark
 
 zip -u "${outdir}/${zipname}" lambda_function.py
 
