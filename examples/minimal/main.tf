@@ -30,7 +30,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_duration" {
   namespace = "AWS/Lambda"
   period = "120"
   statistic = "Average"
-  threshold = "500"
+  threshold = "2000"
   alarm_description = "This metric monitors AWS Lambda duration"
 
   insufficient_data_actions = [

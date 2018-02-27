@@ -130,7 +130,6 @@ def lambda_handler(event, context):
     else:
         message = sns['Message']
 
-    spark_message = {}
 
     # SNS Topic ARN: arn:aws:sns:<REGION>:<AWS_ACCOUNT_ID>:<TOPIC_NAME>
     #
@@ -140,7 +139,7 @@ def lambda_handler(event, context):
     #
     region = sns['TopicArn'].split(':')[3]
     topic_name = sns['TopicArn'].split(':')[-1]
-
+    spark_message = ""
     if json_msg.get('AlarmName'):
         event_src = 'cloudwatch'
 
@@ -154,11 +153,27 @@ def lambda_handler(event, context):
         dictionary =  {
             'color_class': color_map[event_cond],
             'alarm_name':  json_msg['AlarmName'],
+            'alarm_description': json_msg['AlarmDescription'],
             'alarm_status': json_msg['NewStateValue'],
+            'old_status': json_msg['OldStateValue'],
             'alarm_reason': json_msg['NewStateReason'],
+            'namespace': json_msg['Trigger']['Namespace'],
+            'metric_name': json_msg['Trigger']['MetricName'],
             'event_alias': get_event_alias(event_src),
             'event_icon': get_spark_emoji(event_src, topic_name, event_cond.lower())
         }
+
+        spark_message = """<h2>{event_icon} {event_alias}</h2>
+        <hr/>
+        <blockquote class=\"{color_class}\">
+        <li><b>Name:</b> {alarm_name}</li>
+        <li><b>Description:</b> {alarm_description}</li>
+        <li><b>Status:</b> {alarm_status}</li>
+        <li><b>Trigger:</b> {alarm_reason}</li>
+        <li><b>Transition:</b> '{old_status}' --> {alarm_status} </li>
+        <li><b>Namespace:</b> {namespace} - {metric_name}</li>
+        </blockquote>
+        """
 
     elif json_msg.get('Cause'):
         event_src = 'autoscaling'
@@ -172,7 +187,14 @@ def lambda_handler(event, context):
             'event_icon': get_spark_emoji(event_src, topic_name, event_cond.lower())
         }
 
-
+        spark_message = """<h2>{event_icon} {event_alias}</h2>
+        <hr/>
+        <blockquote class=\"{color_class}\">
+        <li><b>Name</b> {alarm_name}</li>
+        <li><b>Status</b> {alarm_status}</li>
+        <li><b>Reason</b> {alarm_reason}</li>
+        </blockquote>
+        """
     elif json_msg.get('ElastiCache:SnapshotComplete'):
         event_src = 'elasticache'
 
@@ -183,6 +205,14 @@ def lambda_handler(event, context):
             'event_alias': get_event_alias(event_src),
             'event_icon': get_spark_emoji(event_src, topic_name, event_cond.lower())
         }
+        spark_message = """<h2>{event_icon} {event_alias}</h2>
+        <hr/>
+        <blockquote class=\"{color_class}\">
+        <li><b>Name</b> {alarm_name}</li>
+        <li><b>Status</b> {alarm_status}</li>
+        <li><b>Reason</b> {alarm_reason}</li>
+        </blockquote>
+        """
 
     elif re.match("RDS", sns.get('Subject') or ''):
         event_src = 'rds'
@@ -204,7 +234,14 @@ def lambda_handler(event, context):
             'event_alias': get_event_alias(event_src),
             'event_icon': get_spark_emoji(event_src, topic_name, event_cond.lower())
         }
-
+        spark_message = """<h2>{event_icon} {event_alias}</h2>
+        <hr/>
+        <blockquote class=\"{color_class}\">
+        <li><b>Name</b> {alarm_name}</li>
+        <li><b>Status</b> {alarm_status}</li>
+        <li><b>Reason</b> {alarm_reason}</li>
+        </blockquote>
+        """
     else:
         event_src = 'other'
 
@@ -215,14 +252,6 @@ def lambda_handler(event, context):
 
     channel_map = config['channel_map']
 
-    spark_message = """<h2>{event_icon} {event_alias}</h2>
-    <hr/>
-    <blockquote class=\"{color_class}\">
-    <li><b>Name</b> {alarm_name}</li>
-    <li><b>Status</b> {alarm_status}</li>
-    <li><b>Reason</b> {alarm_reason}</li>
-    </blockquote>
-    """
 
     payload = {
         'markdown': spark_message.format(**dictionary).replace('\n', ' ').replace('\r', ''),
