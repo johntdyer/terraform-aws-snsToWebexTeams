@@ -3,7 +3,7 @@
 ![Minimal CloudWatch Screenshot](screenshots/minimal-cloudwatch-screenshot.png)
 
 This is a [Terraform](https://www.terraform.io/) module which maps an AWS SNS topic name to a Spark channel.
-The AWS Lambda function code it uses is derived from [robbwagoner/aws-lambda-sns-to-spark](https://github.com/robbwagoner/aws-lambda-sns-to-spark).
+The AWS Lambda function code it uses is derived from [robbwagoner/aws-lambda-sns-to-spark](https://github.com/robbwagoner/aws-lambda-sns-to-spark) and the terraform code is shameslly stolen / ported from [builtinnya/aws-sns-slack-terraform](https://github.com/builtinnya/aws-sns-slack-terraform).
 
 The supported features are:
 
