@@ -46,7 +46,7 @@ __status__ = "Production"
 
 DEFAULT_EVENT_TYPE = os.environ.get('DEFAULT_EVENT_TYPE', 'SNS Event')
 DEFAULT_UNICODE_ICON = os.environ.get('DEFAULT_UNICODE_ICON', 'ℹ️')
-
+DEFAULT_SPARK_SPACE= os.environ.get('DEFAULT_SPARK_SPACE', '')
 DEFAULT_SPARK_ENDPOINT = os.environ.get('SPARK_API', 'api.ciscospark.com/v1/messages')
 
 def get_spark_emoji(event_src, topic_name, event_cond='default'):
@@ -99,7 +99,7 @@ def get_spark_space(region, event_src, topic_name, channel_map):
     try:
         return channel_map[topic_name]
     except KeyError:
-        return DEFAULT_CHANNEL
+        return DEFAULT_SPARK_SPACE
 
 
 def autoscaling_capacity_change(cause):
