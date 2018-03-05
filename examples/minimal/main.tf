@@ -25,24 +25,21 @@ module "sns_to_spark" {
 resource "aws_cloudwatch_metric_alarm" "lambda_duration" {
   alarm_name = "lambda-duration"
   comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods = "1"
+  evaluation_periods = "2"
   metric_name = "Duration"
   namespace = "AWS/Lambda"
-  period = "120"
-  statistic = "Average"
-  threshold = "2000"
+  period = "300"
+  extended_statistic = "p95"
+
+  threshold = "5000"
   alarm_description = "This metric monitors AWS Lambda duration"
 
-  insufficient_data_actions = [
-    "${aws_sns_topic.testing_spark_alarms.arn}"
-  ]
-
   alarm_actions = [
-    "${aws_sns_topic.testing_spark_alarms.arn}"
+    "${aws_sns_topic.production_notices.arn}"
   ]
 
   ok_actions = [
-    "${aws_sns_topic.testing_spark_alarms.arn}"
+    "${aws_sns_topic.production_notices.arn}"
   ]
 }
 
@@ -50,8 +47,8 @@ resource "aws_cloudwatch_metric_alarm" "lambda_duration" {
 # SNS Topics
 #
 
-resource "aws_sns_topic" "testing_spark_alarms" {
-  name = "testingSpark-notices"
+resource "aws_sns_topic" "production_notices" {
+  name = "production-notices"
 }
 
 #####
@@ -63,11 +60,11 @@ resource "aws_lambda_permission" "allow_lambda_sns_to_spark" {
   action = "lambda:invokeFunction"
   function_name = "${module.sns_to_spark.lambda_function_arn}"
   principal = "sns.amazonaws.com"
-  source_arn = "${aws_sns_topic.testing_spark_alarms.arn}"
+  source_arn = "${aws_sns_topic.production_notices.arn}"
 }
 
 resource "aws_sns_topic_subscription" "lambda_sns_to_spark" {
-  topic_arn = "${aws_sns_topic.testing_spark_alarms.arn}"
+  topic_arn = "${aws_sns_topic.production_notices.arn}"
   protocol = "lambda"
   endpoint = "${module.sns_to_spark.lambda_function_arn}"
 }
