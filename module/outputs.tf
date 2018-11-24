@@ -1,3 +1,3 @@
 output "lambda_function_arn" {
-  value = "${aws_lambda_function.sns_to_spark.arn}"
+  value = "${aws_lambda_function.sns_to_webex_teams.arn}"
 }

@@ -1,14 +1,14 @@
-# variable "spark_webhook_url" {
+# variable "webex_teamswebhook_url" {
 #   type = "string"
 # }
 
-variable "spark_channel_map" {
+variable "webex_teams_channel_map" {
   type = "string"
 }
 
 variable "lambda_function_name" {
   type = "string"
-  default = "sns-to-spark"
+  default = "sns-to-webex-teams"
 }
 
 variable "default_username" {
@@ -28,15 +28,15 @@ variable "default_emoji" {
 
 variable "lambda_iam_role_name" {
   type = "string"
-  default = "lambda-sns-to-spark"
+  default = "lambda-sns-to-webex-teams"
 }
 
 variable "lambda_iam_policy_name" {
   type = "string"
-  default = "lambda-sns-to-spark-policy"
+  default = "lambda-sns-to-webex-teams-policy"
 }
 
 
-variable "spark_bearer_token" {
+variable "webex_teams_bearer_token" {
   type = "string"
 }

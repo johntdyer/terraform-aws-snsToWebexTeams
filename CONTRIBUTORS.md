@@ -1,1 +1,1 @@
-# aws-sns-spark-terraform contributors (in alphabetical order)
+# aws-sns-webex-teams-terraform contributors (in alphabetical order)

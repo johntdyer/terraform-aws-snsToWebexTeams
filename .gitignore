@@ -1,4 +1,5 @@
 virtualenv/
+venv/
 testing.sh
 .terraform/
 terraform.tfstate.backup

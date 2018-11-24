@@ -3,8 +3,6 @@
 #
 
 provider "aws" {
-  # access_key = "${var.access_key}"
-  # secret_key = "${var.secret_key}"
   region = "${var.region}"
 }
 
@@ -12,10 +10,10 @@ provider "aws" {
 # Modules
 #
 
-module "sns_to_spark" {
+module "sns_to_webex_teams" {
   source = "../../module"
-  spark_channel_map = "${var.spark_channel_map}"
-  spark_bearer_token = "${var.spark_bearer_token}"
+  webex_teams_channel_map = "${var.webex_teams_channel_map}"
+  webex_teams_bearer_token = "${var.webex_teams_bearer_token}"
 }
 
 #####
@@ -55,16 +53,16 @@ resource "aws_sns_topic" "production_notices" {
 # SNS Subscriptions
 #
 
-resource "aws_lambda_permission" "allow_lambda_sns_to_spark" {
-  statement_id = "AllowSNSToSparkExecutionFromSNS"
+resource "aws_lambda_permission" "allow_lambda_sns_to_webex_teams" {
+  statement_id = "AllowSNSToWebexTeamsExecutionFromSNS"
   action = "lambda:invokeFunction"
-  function_name = "${module.sns_to_spark.lambda_function_arn}"
+  function_name = "${module.sns_to_webex_teams.lambda_function_arn}"
   principal = "sns.amazonaws.com"
   source_arn = "${aws_sns_topic.production_notices.arn}"
 }
 
-resource "aws_sns_topic_subscription" "lambda_sns_to_spark" {
+resource "aws_sns_topic_subscription" "lambda_sns_to_webex_teams" {
   topic_arn = "${aws_sns_topic.production_notices.arn}"
   protocol = "lambda"
-  endpoint = "${module.sns_to_spark.lambda_function_arn}"
+  endpoint = "${module.sns_to_webex_teams.lambda_function_arn}"
 }

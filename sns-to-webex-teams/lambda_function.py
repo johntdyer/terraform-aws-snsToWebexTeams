@@ -23,7 +23,7 @@
 #   limitations under the License.
 #
 '''
-Parse an SNS event message and send to a Spark space
+Parse an SNS event message and send to a Webex Teams space
 '''
 from __future__ import print_function
 
@@ -46,13 +46,13 @@ __status__ = "Production"
 
 DEFAULT_EVENT_TYPE = os.environ.get('DEFAULT_EVENT_TYPE', 'SNS Event')
 DEFAULT_UNICODE_ICON = os.environ.get('DEFAULT_UNICODE_ICON', 'ℹ️')
-DEFAULT_SPARK_SPACE= os.environ.get('DEFAULT_SPARK_SPACE', '')
-DEFAULT_SPARK_ENDPOINT = os.environ.get('SPARK_API', 'api.ciscospark.com/v1/messages')
+DEFAULT_WEBEX_TEAMS_SPACE = os.environ.get('DEFAULT_WEBEX_TEAM_SPACE', '')
+DEFAULT_WEBEX_TEAMS_ENDPOINT = os.environ.get('WEBEX_TEAMS_API', 'api.ciscospark.com/v1/messages')
 
-def get_spark_emoji(event_src, topic_name, event_cond='default'):
+def get_teams_emoji(event_src, topic_name, event_cond='default'):
     '''Map an event source, severity, and condition to an unicode emoji
     '''
-    # print("get_spark_emoji: <event_src: '{0}'| topic_name: '{1}' | event_cond: '{2}'>".format(event_src, topic_name,event_cond))
+    # print("get_teams_emoji: <event_src: '{0}'| topic_name: '{1}' | event_cond: '{2}'>".format(event_src, topic_name,event_cond))
     emoji_map = {
         'autoscaling': {
             'notices': {'default': '⚖️'}},
@@ -93,13 +93,13 @@ def get_event_alias(event_src):
         return DEFAULT_EVENT_TYPE
 
 
-def get_spark_space(region, event_src, topic_name, channel_map):
-    '''Map region and event type to Spark channel name
+def get_webex_teams_space(region, event_src, topic_name, channel_map):
+    '''Map region and event type to Teams channel name
     '''
     try:
         return channel_map[topic_name]
     except KeyError:
-        return DEFAULT_SPARK_SPACE
+        return DEFAULT_WEBEX_TEAMS_SPACE
 
 
 def autoscaling_capacity_change(cause):
@@ -115,7 +115,7 @@ def lambda_handler(event, context):
     '''
 
     config = {
-      'bearer_token': 'Bearer ' + os.environ['SPARK_TOKEN'],
+      'bearer_token': 'Bearer ' + os.environ['WEBEX_TEAMS_TOKEN'],
       'webhook_url': 'api.ciscospark.com/v1/messages',
       'channel_map': json.loads(base64.b64decode(os.environ['CHANNEL_MAP']))
     }
@@ -133,13 +133,13 @@ def lambda_handler(event, context):
 
     # SNS Topic ARN: arn:aws:sns:<REGION>:<AWS_ACCOUNT_ID>:<TOPIC_NAME>
     #
-    # SNS Topic Names => Spark Channels
+    # SNS Topic Names => Webex Teams Channels
     #  <env>-alerts => alerts-<region>
     #  <env>-notices => events-<region>
     #
     region = sns['TopicArn'].split(':')[3]
     topic_name = sns['TopicArn'].split(':')[-1]
-    spark_message = ""
+    webex_teams_message = ""
     if json_msg.get('AlarmName'):
         event_src = 'cloudwatch'
 
@@ -160,10 +160,10 @@ def lambda_handler(event, context):
             'namespace': json_msg['Trigger']['Namespace'],
             'metric_name': json_msg['Trigger']['MetricName'],
             'event_alias': get_event_alias(event_src),
-            'event_icon': get_spark_emoji(event_src, topic_name, event_cond.lower())
+            'event_icon': get_teams_emoji(event_src, topic_name, event_cond.lower())
         }
 
-        spark_message = """<h2>{event_icon} {event_alias}</h2>
+        webex_teams_message = """<h2>{event_icon} {event_alias}</h2>
         <hr/>
         <blockquote class=\"{color_class}\">
         <li><b>Name:</b> {alarm_name}</li>
@@ -184,10 +184,10 @@ def lambda_handler(event, context):
             'alarm_status': autoscaling_capacity_change(json_msg['Cause']),
             'alarm_reason': json_msg['Cause'],
             'event_alias': get_event_alias(event_src),
-            'event_icon': get_spark_emoji(event_src, topic_name, event_cond.lower())
+            'event_icon': get_teams_emoji(event_src, topic_name, event_cond.lower())
         }
 
-        spark_message = """<h2>{event_icon} {event_alias}</h2>
+        webex_teams_message = """<h2>{event_icon} {event_alias}</h2>
         <hr/>
         <blockquote class=\"{color_class}\">
         <li><b>Name</b> {alarm_name}</li>
@@ -203,9 +203,9 @@ def lambda_handler(event, context):
             'alarm_name':  'ElastiCache Snapshot',
             'alarm_reason': 'Snapshot Complete',
             'event_alias': get_event_alias(event_src),
-            'event_icon': get_spark_emoji(event_src, topic_name, event_cond.lower())
+            'event_icon': get_teams_emoji(event_src, topic_name, event_cond.lower())
         }
-        spark_message = """<h2>{event_icon} {event_alias}</h2>
+        webex_teams_message = """<h2>{event_icon} {event_alias}</h2>
         <hr/>
         <blockquote class=\"{color_class}\">
         <li><b>Name</b> {alarm_name}</li>
@@ -232,9 +232,9 @@ def lambda_handler(event, context):
             'alarm_reason': json_msg['Event Message'],
             'alarm_status' : "N/A",
             'event_alias': get_event_alias(event_src),
-            'event_icon': get_spark_emoji(event_src, topic_name, event_cond.lower())
+            'event_icon': get_teams_emoji(event_src, topic_name, event_cond.lower())
         }
-        spark_message = """<h2>{event_icon} {event_alias}</h2>
+        webex_teams_message = """<h2>{event_icon} {event_alias}</h2>
         <hr/>
         <blockquote class=\"{color_class}\">
         <li><b>Name</b> {alarm_name}</li>
@@ -254,8 +254,8 @@ def lambda_handler(event, context):
 
 
     payload = {
-        'markdown': spark_message.format(**dictionary).replace('\n', ' ').replace('\r', ''),
-        'roomId' : get_spark_space(region, event_src, topic_name, channel_map),
+        'markdown': webex_teams_message.format(**dictionary).replace('\n', ' ').replace('\r', ''),
+        'roomId': get_webex_teams_space(region, event_src, topic_name, channel_map),
     }
     # print('DEBUG PAYLOAD:', json.dumps(payload))
     headers = {'Authorization': config['bearer_token']}
@@ -302,7 +302,7 @@ if __name__ == '__main__':
         "Signature": "EXAMPLE",
         "SigningCertUrl": "EXAMPLE",
         "MessageId": "95df01b4-ee98-5cb9-9903-4c221d41eb5e",
-        "Message": "{\"AlarmName\":\"sns-spark-test-from-cloudwatch-total-cpu\",\"AlarmDescription\":null,\"AWSAccountId\":\"123456789012\",\"NewStateValue\":\"OK\",\"NewStateReason\":\"Threshold Crossed: 1 datapoint (7.9053535353535365) was not greater than or equal to the threshold (8.0).\",\"StateChangeTime\":\"2015-11-09T21:19:43.454+0000\",\"Region\":\"US - N. Virginia\",\"OldStateValue\":\"ALARM\",\"Trigger\":{\"MetricName\":\"CPUUtilization\",\"Namespace\":\"AWS/EC2\",\"Statistic\":\"AVERAGE\",\"Unit\":null,\"Dimensions\":[],\"Period\":300,\"EvaluationPeriods\":1,\"ComparisonOperator\":\"GreaterThanOrEqualToThreshold\",\"Threshold\":8.0}}",
+        "Message": "{\"AlarmName\":\"sns-webex-teams-test-from-cloudwatch-total-cpu\",\"AlarmDescription\":null,\"AWSAccountId\":\"123456789012\",\"NewStateValue\":\"OK\",\"NewStateReason\":\"Threshold Crossed: 1 datapoint (7.9053535353535365) was not greater than or equal to the threshold (8.0).\",\"StateChangeTime\":\"2015-11-09T21:19:43.454+0000\",\"Region\":\"US - N. Virginia\",\"OldStateValue\":\"ALARM\",\"Trigger\":{\"MetricName\":\"CPUUtilization\",\"Namespace\":\"AWS/EC2\",\"Statistic\":\"AVERAGE\",\"Unit\":null,\"Dimensions\":[],\"Period\":300,\"EvaluationPeriods\":1,\"ComparisonOperator\":\"GreaterThanOrEqualToThreshold\",\"Threshold\":8.0}}",
         "MessageAttributes": {
           "Test": {
             "Type": "String",
@@ -316,7 +316,7 @@ if __name__ == '__main__':
         "Type": "Notification",
         "UnsubscribeUrl": "EXAMPLE",
         "TopicArn": "arn:aws:sns:us-east-1:123456789012:production-notices",
-        "Subject": "OK: sns-spark-test-from-cloudwatch-total-cpu"
+        "Subject": "OK: sns-webex-teams-test-from-cloudwatch-total-cpu"
       }
     }
   ]
@@ -336,7 +336,7 @@ if __name__ == '__main__':
         "Signature": "EXAMPLE",
         "SigningCertUrl": "EXAMPLE",
         "MessageId": "95df01b4-ee98-5cb9-9903-4c221d41eb5e",
-        "Message": "{\"AlarmName\":\"sns-spark-test-from-cloudwatch-total-cpu\",\"AlarmDescription\":null,\"AWSAccountId\":\"123456789012\",\"NewStateValue\":\"ALARM\",\"NewStateReason\":\"Threshold Crossed: 1 datapoint (7.9053535353535365) was not greater than or equal to the threshold (8.0).\",\"StateChangeTime\":\"2015-11-09T21:19:43.454+0000\",\"Region\":\"US - N. Virginia\",\"OldStateValue\":\"ALARM\",\"Trigger\":{\"MetricName\":\"CPUUtilization\",\"Namespace\":\"AWS/EC2\",\"Statistic\":\"AVERAGE\",\"Unit\":null,\"Dimensions\":[],\"Period\":300,\"EvaluationPeriods\":1,\"ComparisonOperator\":\"GreaterThanOrEqualToThreshold\",\"Threshold\":8.0}}",
+        "Message": "{\"AlarmName\":\"sns-webex-teams-test-from-cloudwatch-total-cpu\",\"AlarmDescription\":null,\"AWSAccountId\":\"123456789012\",\"NewStateValue\":\"ALARM\",\"NewStateReason\":\"Threshold Crossed: 1 datapoint (7.9053535353535365) was not greater than or equal to the threshold (8.0).\",\"StateChangeTime\":\"2015-11-09T21:19:43.454+0000\",\"Region\":\"US - N. Virginia\",\"OldStateValue\":\"ALARM\",\"Trigger\":{\"MetricName\":\"CPUUtilization\",\"Namespace\":\"AWS/EC2\",\"Statistic\":\"AVERAGE\",\"Unit\":null,\"Dimensions\":[],\"Period\":300,\"EvaluationPeriods\":1,\"ComparisonOperator\":\"GreaterThanOrEqualToThreshold\",\"Threshold\":8.0}}",
         "MessageAttributes": {
           "Test": {
             "Type": "String",
@@ -350,7 +350,7 @@ if __name__ == '__main__':
         "Type": "Notification",
         "UnsubscribeUrl": "EXAMPLE",
         "TopicArn": "arn:aws:sns:us-east-1:123456789012:production-notices",
-        "Subject": "ALARM: sns-spark-test-from-cloudwatch-total-cpu"
+        "Subject": "ALARM: sns-webex-teams-test-from-cloudwatch-total-cpu"
       }
     }
   ]
@@ -369,7 +369,7 @@ if __name__ == '__main__':
         "Signature": "EXAMPLE",
         "SigningCertUrl": "EXAMPLE",
         "MessageId": "95df01b4-ee98-5cb9-9903-4c221d41eb5e",
-        "Message": "{\"AlarmName\":\"sns-spark-test-from-cloudwatch-total-cpu\",\"AlarmDescription\":null,\"AWSAccountId\":\"123456789012\",\"NewStateValue\":\"INSUFFICIENT_DATA\",\"NewStateReason\":\"Threshold Crossed: 1 datapoint (7.9053535353535365) was not greater than or equal to the threshold (8.0).\",\"StateChangeTime\":\"2015-11-09T21:19:43.454+0000\",\"Region\":\"US - N. Virginia\",\"OldStateValue\":\"ALARM\",\"Trigger\":{\"MetricName\":\"CPUUtilization\",\"Namespace\":\"AWS/EC2\",\"Statistic\":\"AVERAGE\",\"Unit\":null,\"Dimensions\":[],\"Period\":300,\"EvaluationPeriods\":1,\"ComparisonOperator\":\"GreaterThanOrEqualToThreshold\",\"Threshold\":8.0}}",
+        "Message": "{\"AlarmName\":\"sns-webex-teams-test-from-cloudwatch-total-cpu\",\"AlarmDescription\":null,\"AWSAccountId\":\"123456789012\",\"NewStateValue\":\"INSUFFICIENT_DATA\",\"NewStateReason\":\"Threshold Crossed: 1 datapoint (7.9053535353535365) was not greater than or equal to the threshold (8.0).\",\"StateChangeTime\":\"2015-11-09T21:19:43.454+0000\",\"Region\":\"US - N. Virginia\",\"OldStateValue\":\"ALARM\",\"Trigger\":{\"MetricName\":\"CPUUtilization\",\"Namespace\":\"AWS/EC2\",\"Statistic\":\"AVERAGE\",\"Unit\":null,\"Dimensions\":[],\"Period\":300,\"EvaluationPeriods\":1,\"ComparisonOperator\":\"GreaterThanOrEqualToThreshold\",\"Threshold\":8.0}}",
         "MessageAttributes": {
           "Test": {
             "Type": "String",
@@ -383,7 +383,7 @@ if __name__ == '__main__':
         "Type": "Notification",
         "UnsubscribeUrl": "EXAMPLE",
         "TopicArn": "arn:aws:sns:us-east-1:123456789012:production-notices",
-        "Subject": "INSUFFICIENT_DATA: sns-spark-test-from-cloudwatch-total-cpu"
+        "Subject": "INSUFFICIENT_DATA: sns-webex-teams-test-from-cloudwatch-total-cpu"
       }
     }
   ]
