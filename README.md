@@ -2,7 +2,7 @@
 
 ![Minimal CloudWatch Screenshot](screenshots/minimal-cloudwatch-screenshot.png)
 
-This is a [Terraform](https://www.terraform.io/) module which maps an AWS SNS topic name to a Spark channel.
+This is a [Terraform](https://www.terraform.io/) module which maps an AWS SNS topic name to a Webex Teams channel.
 The AWS Lambda function code it uses is derived from [robbwagoner/aws-lambda-sns-to-webex-teams](https://github.com/robbwagoner/aws-lambda-sns-to-webex-teams) and the terraform code is shameslly stolen / ported from [builtinnya/aws-sns-slack-terraform](https://github.com/builtinnya/aws-sns-slack-terraform).
 
 The supported features are:
@@ -22,18 +22,18 @@ module "sns_to_webex_teams" {
   source = "github.com/builtinnya/aws-sns-webex-teams-terraform/module"
 
   webex_teams_bearer_token = "abc123"
-  spark_channel_map = "{\"production-notices\": \"Y2lzY29zcGFyazovL3VzL1JPT00vMDA2ZjYzNzAtMWJlOS0xMWU4LTljNTUtOTMzZmEzYWJkNjYy\"}"
+  webex_teams_channel_map = "{\"production-notices\": \"Y2lzY29zcGFyazovL3VzL1JPT00vMDA2ZjYzNzAtMWJlOS0xMWU4LTljNTUtOTMzZmEzYWJkNjYy\"}"
   # The following variables are optional.
   lambda_function_name = "sns-to-webex-teams"
 
 }
 
 resource "aws_sns_topic" "testing_webex_teams_alarms" {
-  name = "testingSpark-notices"
+  name = "testingWebexTeams-notices"
 }
 
 resource "aws_lambda_permission" "allow_lambda_sns_to_webex_teams" {
-  statement_id = "AllowSNSToSparkExecutionFromSNS"
+  statement_id = "AllowSNSToWebexTeamsExecutionFromSNS"
   action = "lambda:invokeFunction"
   function_name = "${module.sns_to_webex_teams.lambda_function_arn}"
   principal = "sns.amazonaws.com"
@@ -51,8 +51,8 @@ resource "aws_sns_topic_subscription" "lambda_sns_to_webex_teams" {
 
 |       **Variable**         |                          **Description**                          | **Required** | **Default**                    |
 |:--------------------------:|:-----------------------------------------------------------------:|--------------|--------------------------------|
-| **spark_channel_map**      | Topic-to-channel mapping string in JSON.                          | yes          |                                |
-| **lambda_function_name**   | AWS Lambda function name for the Spark notifier                   | no           | `"sns-to-webex-teams"`               |
+| **webex_teams_channel_map**      | Topic-to-channel mapping string in JSON.                          | yes          |                                |
+| **lambda_function_name**   | AWS Lambda function name for the Webex Teams notifier                   | no           | `"sns-to-webex-teams"`               |
 | **lambda_iam_role_name**   | IAM role name for lambda functions.                               | no           | `"lambda-sns-to-webex-teams"`        |
 | **lambda_iam_policy_name** | IAM policy name for lambda functions.                             | no           | `"lambda-sns-to-webex-teams-policy"` |
 
@@ -142,7 +142,7 @@ $ ./build-function.sh
 To test the function locally, just run [lambda_function.py](/sns-to-webex-teams/lambda_function.py) with some environment variables.
 
 ```bash
-$ SPARK_TOKEN="abv123" \
+$ WEBEX_TEAMS_BEARER_TOKEN="abv123" \
   CHANNEL_MAP=`echo '{"production-notices": "Y2lzY29zcGFyazovL3VzL1JPT00vMDA2ZjYzNzAtMWJlOS0xMWU4LTljNTUtOTMzZmEzYWJkNjYy"}' | base64` \
   python sns-to-webex-teams/lambda_function.py
 ```
