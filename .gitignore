@@ -1,4 +1,5 @@
 virtualenv/
+lab.txt
 venv/
 testing.sh
 .terraform/

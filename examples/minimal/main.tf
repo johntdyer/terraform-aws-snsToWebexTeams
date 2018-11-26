@@ -11,7 +11,7 @@ provider "aws" {
 #
 
 module "sns_to_webex_teams" {
-  source = "../../module"
+  source = "../.."
   webex_teams_channel_map = "${var.webex_teams_channel_map}"
   webex_teams_bearer_token = "${var.webex_teams_bearer_token}"
 }
