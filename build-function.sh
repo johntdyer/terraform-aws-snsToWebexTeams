@@ -7,7 +7,7 @@ set -o xtrace
 
 __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-outdir="${__dir}/module/lambda"
+outdir="${__dir}/lambda"
 zipname="sns-to-webex-teams.zip"
 
 pushd sns-to-webex-teams
